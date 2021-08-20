@@ -1,9 +1,3 @@
-
-;; Image size
-(defvar image-width)
-(defvar image-height)
-(setf image-width 256)
-(setf image-height 256)
 ;; render
 ;;(defvar image-line (make-array image-height))
 ;;(defun render-line (array-line)
@@ -163,9 +157,6 @@
 ;;              If it impacts an object - returns color Y
 
 
-;; Camera
-(defvar *camera* (make-vec :x 0 :y 0 :z 0))
-
 
 ;; A function to do vector -> Pixel, print
 (defun pixel-color (out vector-n)
@@ -173,6 +164,27 @@
           (truncate (* 255.999 (vec-x vector-n)))
           (truncate (* 255.999 (vec-y vector-n)))
           (truncate (* 255.999 (vec-z vector-n)))))
+;; ray -> color
+(defun ray-color (ray-n)
+  (let* ((ray-dir (ray-direction ray-n))
+         (tp (+ 1.0 (* 0.5 (vec-y ray-dir)))))
+    (vec-addvec
+     (vec-* tp (make-vec :x 0.5 :y 0.7 :z 1.0)) (vec-* (- 1.0 tp)
+                                                     (make-vec :x 1.0
+                                                               :y 1.0
+                                                               :z 1.0)))))
+;; Image size
+(defvar image-width)
+(defvar image-ratio)
+(defvar image-height)
+(setf image-width 1600)
+(setf image-height 900)
+
+;; Camera
+(defvar *origin* (make-vec :x 0 :y 0 :z 0))
+(defvar horizontal (make-vec :x image-width))
+(defvar vertical (make-vec :y image-height))
+
 ;; render image
 (defun render-image (out)
   (format out "~S~&" 'P3)
