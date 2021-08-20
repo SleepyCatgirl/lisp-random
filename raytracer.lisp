@@ -27,8 +27,8 @@
 
 
 
-(defvar image-line (make-array (list image-width image-height)))
-(setf image-line (make-array (list image-width image-height)))
+;;(defvar image-line (make-array (list image-width image-height)))
+;;(setf image-line (make-array (list image-width image-height)))
 ;; create data for ppm file
 ;;(defun render-image (out)
 ;;  (format out "~S~&" 'P3)
@@ -77,7 +77,7 @@
   (y 0)
   (z 0))
 ;; Helper functions, operations on vectors
-(defun vec* (n V)
+(defun vec-* (n V)
   "Multiplication for x y z, of vector V, by n"
   (make-vec
    :x (* (vec-x V) n)
@@ -142,6 +142,7 @@
    :x (+ (vec-x V) (vec-x Y))
    :y (+ (vec-y V) (vec-y Y))
    :z (+ (vec-z V) (vec-z Y))))
+
 ;; Actual ray stuff
 (defstruct ray
   (:origin (make-vec))
@@ -164,27 +165,48 @@
           (truncate (* 255.999 (vec-x vector-n)))
           (truncate (* 255.999 (vec-y vector-n)))
           (truncate (* 255.999 (vec-z vector-n)))))
+
+
+;; Sphere
+(defun hit-sphere (center radius r)
+  (let* ((oc (vec-minusvec (ray-origin r) center))
+         (a (vec-dot (ray-direction r) (ray-direction r)))
+         (b (* 2.0 (vec-dot oc (ray-direction r))))
+         (c (- (vec-dot oc oc) (* radius radius)))
+         (discr (- (* b b) (* 4 a c))))
+    (> discr 0)))
+
 ;; ray -> color
 (defun ray-color (ray-n)
   (let* ((ray-dir (ray-direction ray-n))
          (tp (+ 1.0 (* 0.5 (vec-y ray-dir)))))
-    (vec-addvec
+    (if (hit-sphere (make-vec :z -1) 0.5 ray-n)
+        (make-vec :x 1 :y 0.5)
+        (vec-addvec
      (vec-* tp (make-vec :x 0.5 :y 0.7 :z 1.0)) (vec-* (- 1.0 tp)
                                                      (make-vec :x 1.0
                                                                :y 1.0
-                                                               :z 1.0)))))
+                                                               :z 1.0))))))
 ;; Image size
-(defvar image-width)
-(defvar image-ratio)
+(defvar image-width 100)
+(defvar image-ratio (/ 16 9))
 (defvar image-height)
-(setf image-width 1600)
-(setf image-height 900)
+(setf image-width 800)
+(setf image-height (truncate (/ image-width image-ratio)))
 
 ;; Camera
 (defvar *origin* (make-vec :x 0 :y 0 :z 0))
-(defvar horizontal (make-vec :x image-width))
-(defvar vertical (make-vec :y image-height))
 
+(defvar viewport-height  2.0)
+(defvar viewport-width (* image-ratio viewport-height))
+(defvar focal-lenght 1.0)
+
+(defvar horizontal (make-vec :x viewport-width))
+(defvar vertical (make-vec :y viewport-height))
+(defvar lower-left-corner (vec-minusvec
+                           (vec-minusvec
+                            (vec-minusvec *origin* (vec/ 2 horizontal)) (vec/ 2 vertical))
+                           (make-vec :z focal-lenght)))
 ;; render image
 (defun render-image (out)
   (format out "~S~&" 'P3)
@@ -195,13 +217,12 @@
        ((< index-j 0) nil)
        (format t "~% Scanlines remaining: ~S" index-j)
     (do* ((index-i 0 (+ index-i 1))
-          (pixel (make-vec
-                                 :x (/ index-i image-width)
-                                 :y (/ index-j image-height)
-                                 :z (/ 1 4))
-                 (make-vec
-                                 :x (/ index-i image-width)
-                                 :y (/ index-j image-height)
-                                 :z (/ 1 4))))
+          (u (/ index-i image-width) (/ index-i image-width))
+          (v (/ index-j image-height) (/ index-j image-height))
+          (r (make-ray :origin *origin*
+                       :direction (vec-addvec (vec-* u horizontal) (vec-* v vertical)))
+             (make-ray :origin *origin*
+                       :direction (vec-addvec lower-left-corner (vec-addvec (vec-* u horizontal) (vec-* v vertical)))))
+          (pixel (ray-color r) (ray-color r)))
          ((>= index-i image-width) nil)
          (pixel-color out pixel))))
