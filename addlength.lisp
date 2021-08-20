@@ -1,0 +1,5 @@
+(defun addlength (l)
+  (cons (+ 4 (length l)) l))
+(addlength '(aa))
+(defun add (x)
+  (+ x x))

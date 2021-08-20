@@ -1,0 +1,37 @@
+(defun space-over (n)
+  "Prints n spaces one by one by using recursion"
+  (cond ((zerop n) nil)
+        ((< n 0) (format t "error"))
+        (t (format t " ") (space-over (- n 1)))))
+(defun plot-one-point (plot-string y-val)
+  (space-over y-val)
+  (format t "~A~%"
+          plot-string))
+
+(defun plot-points (plot-string list-y)
+  (cond ((null list-y) nil)
+        (t (plot-one-point plot-string (car list-y))
+           (plot-points plot-string (cdr list-y)))))
+
+(defun generate (m n)
+  (cond ((equal m (+ 1 n)) nil)
+        (t (append (list m) (generate (+ m 1) n)))))
+
+(defun make-graph ()
+  (format t "~%What function?: ")
+  (let* ((funct (read)))
+    (format t "~%Starting point: ")
+    (let* ((start (read)))
+      (format t "~%Ending point: ")
+      (let* ((end (read)))
+        (format t "~%Plotting string: ")
+        (let* ((plotting-string (read))
+               (generated-y (generate start end))
+               (y-func (mapcar funct generated-y)))
+          (plot-points plotting-string y-func))))))
+(defun square-speed (x)
+  (declare (optimize (speed 3) (safety 0)))
+  (* x x))
+
+(defun square (x)
+  (* x x))
