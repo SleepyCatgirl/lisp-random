@@ -50,24 +50,24 @@
 ;;         ((>= index-i image-width) nil)
 ;;      (format out "~&~S ~S ~S" aref-red aref-green aref-blue))))
 
-
-(defun render-image (out)
-  (format out "~S~&" 'P3)
-  (format out "~S" image-width)
-  (format out " ~S" image-height)
-  (format out "~&~S~&" 255)
-  (do* ((index-j image-height (- index-j 1)))
-       ((< index-j 0) nil)
-       (format t "~% Scanlines remaining: ~S" index-j)
-    (do* ((index-i 0 (+ index-i 1))
-          (aref-red 1 (/ index-i image-width))
-          (aref-green 1 (/ index-j image-height))
-          (aref-blue (/ 1 4))
-          (int-red 0 (truncate (* 255.999 aref-red)))
-          (int-green 0 (truncate (* 255.999 aref-green)))
-          (int-blue 0 (truncate (* 255.999 aref-blue))))
-         ((>= index-i image-width) nil)
-    (format out "~&~S ~S ~S" int-red int-green int-blue))))
+;;
+;;(defun render-image (out)
+;;  (format out "~S~&" 'P3)
+;;  (format out "~S" image-width)
+;;  (format out " ~S" image-height)
+;;  (format out "~&~S~&" 255)
+;;  (do* ((index-j image-height (- index-j 1)))
+;;       ((< index-j 0) nil)
+;;       (format t "~% Scanlines remaining: ~S" index-j)
+;;    (do* ((index-i 0 (+ index-i 1))
+;;          (aref-red 1 (/ index-i image-width))
+;;          (aref-green 1 (/ index-j image-height))
+;;          (aref-blue (/ 1 4))
+;;          (int-red 0 (truncate (* 255.999 aref-red)))
+;;          (int-green 0 (truncate (* 255.999 aref-green)))
+;;          (int-blue 0 (truncate (* 255.999 aref-blue))))
+;;         ((>= index-i image-width) nil)
+;;    (format out "~&~S ~S ~S" int-red int-green int-blue))))
 ;; create ppm file
 ;;
 (defun write-data ()
@@ -165,3 +165,31 @@
 
 ;; Camera
 (defvar *camera* (make-vec :x 0 :y 0 :z 0))
+
+
+;; A function to do vector -> Pixel, print
+(defun pixel-color (out vector-n)
+  (format out "~&~S ~S ~S"
+          (truncate (* 255.999 (vec-x vector-n)))
+          (truncate (* 255.999 (vec-y vector-n)))
+          (truncate (* 255.999 (vec-z vector-n)))))
+;; render image
+(defun render-image (out)
+  (format out "~S~&" 'P3)
+  (format out "~S" image-width)
+  (format out " ~S" image-height)
+  (format out "~&~S~&" 255)
+  (do* ((index-j image-height (- index-j 1)))
+       ((< index-j 0) nil)
+       (format t "~% Scanlines remaining: ~S" index-j)
+    (do* ((index-i 0 (+ index-i 1))
+          (pixel (make-vec
+                                 :x (/ index-i image-width)
+                                 :y (/ index-j image-height)
+                                 :z (/ 1 4))
+                 (make-vec
+                                 :x (/ index-i image-width)
+                                 :y (/ index-j image-height)
+                                 :z (/ 1 4))))
+         ((>= index-i image-width) nil)
+         (pixel-color out pixel))))
